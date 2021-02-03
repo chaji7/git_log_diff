@@ -26,18 +26,6 @@ $project = filter_input(INPUT_GET, 'project');
     .tags { color: goldenrod; }
   </style>
 
-<?php /*
-  <!-- CSS only -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
-
-  <!-- JavaScript Bundle with Popper -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW" crossorigin="anonymous"></script>
-*/ ?>
-
-  <?php /*
-  <link rel="stylesheet" href="/includes/css/bootstrap/css/bootstrap.css">
-  <script src="/includes/css/bootstrap/js/bootstrap.js"></script>
-  */ ?>
 </head>
 <body>
   <h1><?php echo h($project).'のGit履歴'; ?></h1>
@@ -73,7 +61,6 @@ $project = filter_input(INPUT_GET, 'project');
   // 抽出したデータをHTML整形して取得
   $lines = array();
   exec( "/usr/bin/env git log --pretty=tformat:'</span>%h - <span class=\"date\">[%cr]</span> <span class=\"tags\">%d</span> __COMMENT__ <span class=\"author\">&lt;%an&gt;</span></li>' --all --graph --abbrev-commit $limit", $lines );
-  //git log --pretty='format:%C(yellow)%h %C(green)%cd %C(reset)%s %C(red)%d %C(cyan)[%an]' --date=format:'%c' --all --graph
 
   // コミットハッシュ値の取得
   $temp_hashes = array();
@@ -85,14 +72,10 @@ $project = filter_input(INPUT_GET, 'project');
     }
   }
 
-  //echo '<pre>';
-  //var_dump($hashes);
-  //echo '</pre>';
 ?>
 
 <?php if(!empty($hashes)): ?>
-    
-  <form action="./download.php" method="get">
+  <form action="./download.php" method="get" name="diffForm" id="Form">
     <?php
       if(!empty($_GET['project'])){
         $project = $_GET['project'];
@@ -114,7 +97,8 @@ $project = filter_input(INPUT_GET, 'project');
       <option value="<?php echo h($hash); ?>"><?php echo h($hash); ?></option>
       <?php endforeach; ?>
     </select>
-    <input type="submit" value="抽出">
+    <input type="submit" value="抽出" id="submit_btn" onclick="return false">
+    <p>下は抽出したい範囲の一つ下を選択してください</p>
   </form>
 <?php endif; ?>
   
@@ -131,4 +115,14 @@ $project = filter_input(INPUT_GET, 'project');
   </ul>
 <?php endif; ?>
   </body>
+
+<script>
+var element = document.getElementById('submit_btn');
+element.addEventListener("click", function(event){
+  flg = confirm('ダウンロードしてもよろしいですか？');
+  if(flg == true){
+    document.diffForm.submit();
+  }
+});
+</script>
 </html>
