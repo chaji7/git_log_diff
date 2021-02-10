@@ -24,6 +24,9 @@ $project = filter_input(INPUT_GET, 'project');
     .date { color: green; }
     .author, .author a { color: darkviolet; }
     .tags { color: goldenrod; }
+    .commitMsg { height: 2em; }
+    .caution { font-size: 24px; color: red; font-weight: bold; }
+    .btnArea { width:300px; }
   </style>
 
 </head>
@@ -39,7 +42,7 @@ $project = filter_input(INPUT_GET, 'project');
   }
   ini_set('memory_limit','256M');
 
-  $limit = '--max-count=50';
+  $limit = '--max-count=500';
   if ( !empty($_GET['limit']) ){
     if ( strtolower($_GET['limit']) == 'all' ){
       $limit = '--max';
@@ -54,27 +57,41 @@ $project = filter_input(INPUT_GET, 'project');
     chdir($path_to_repository);
   }
 
+
+  $data = [];
+  
   // コミットメッセージのみを取得
-  $msgs = array();
-  exec( "/usr/bin/env git log --pretty=tformat:%s --all --graph $limit", $msgs );
+  exec( "/usr/bin/env git log --pretty=tformat:%s --all --graph $limit", $data['graph_msgs'] );
+
+  // コミットメッセージのみを取得
+  $temp_msgs = array();
+  exec( "/usr/bin/env git log --pretty=tformat:%s --all $limit", $temp_msgs );
+  foreach($temp_msgs as $v){
+    if(preg_match('/Merge branch/', $v)){
+      $data['msgs'][] = 'Merge branch 〜';
+    }else{
+      $data['msgs'][] = $v;
+    }
+  }
+
 
   // 抽出したデータをHTML整形して取得
-  $lines = array();
-  exec( "/usr/bin/env git log --pretty=tformat:'</span>%h - <span class=\"date\">[%cr]</span> <span class=\"tags\">%d</span> __COMMENT__ <span class=\"author\">&lt;%an&gt;</span></li>' --all --graph --abbrev-commit $limit", $lines );
+  exec( "/usr/bin/env git log --pretty=tformat:'</span>%h - <span class=\"date\">[%cr]</span> <span class=\"tags\">%d</span> __COMMENT__ <span class=\"author\">&lt;%an&gt;</span></li>' --all --graph --abbrev-commit $limit", $data['lines'] );
 
   // コミットハッシュ値の取得
   $temp_hashes = array();
   exec( "/usr/bin/env git log --pretty=tformat:%h --all --graph $limit", $temp_hashes );
-  $hashes = array();
   foreach($temp_hashes as $hash){
     if(preg_match('/[!-~]{7}/', $hash, $match)){
-      $hashes[] = $match[0];
+      $data['hashes'][] = $match[0];
+    }else{
+      $data['hashes'][] = '';
     }
   }
-
+  
 ?>
 
-<?php if(!empty($hashes)): ?>
+<?php if(!empty($data['hashes'])): ?>
   <form action="./download.php" method="get" name="diffForm" id="Form">
     <?php
       if(!empty($_GET['project'])){
@@ -85,36 +102,46 @@ $project = filter_input(INPUT_GET, 'project');
     ?>
     <input type="hidden" name="project" value="<?php echo h($project); ?>" >
     上：
-    <select name="up">
-      <?php foreach($hashes as $hash): ?>
-      <option value="<?php echo h($hash); ?>"><?php echo h($hash); ?></option>
+    <select name="up" id="UP">
+      <?php foreach($data['hashes'] as $key => $hash): ?>
+      <option value="<?php echo h($hash); ?>"><?php echo h($hash.' : '.$data['msgs'][$key]); ?></option>
       <?php endforeach; ?>
     </select>
 
     下：
-    <select name="down">
-      <?php foreach($hashes as $hash): ?>
-      <option value="<?php echo h($hash); ?>"><?php echo h($hash); ?></option>
+    <select name="down" id="DOWN">
+      <?php foreach($data['hashes'] as $key =>$hash): ?>
+      <option value="<?php echo h($hash); ?>"><?php echo h($hash.' : '.$data['msgs'][$key]); ?></option>
       <?php endforeach; ?>
     </select>
     <input type="submit" value="抽出" id="submit_btn" onclick="return false">
-    <p>下は抽出したい範囲の一つ下を選択してください</p>
+    <p class="caution">「下」は抽出したい範囲の一つ下を選択してください</p>
   </form>
 <?php endif; ?>
   
 
-<?php if (!empty($msgs) && !empty($lines)): ?>
+<?php if (!empty($data['graph_msgs']) && !empty($data['lines'])): ?>
   <ul>
-    <?php for ($i=0; $i<count($lines); $i++ ): ?>
+    <?php for ($i=0; $i<count($data['lines']); $i++ ): ?>
       <?php
-        $msg = htmlentities($msgs[$i],ENT_QUOTES);
-        $message = str_replace('__COMMENT__',$msg,$lines[$i]);
+        $msg = htmlentities($data['graph_msgs'][$i],ENT_QUOTES);
+        $message = str_replace('__COMMENT__',$msg,$data['lines'][$i]);
       ?>
-      <li><span class="graph"><?php echo $message; ?></span></li>
+      <li class="commitMsg">
+        <?php /*
+        <span class="btnArea">
+          <?php if(!empty($data['hashes'][$i])): ?>
+            <button onClick="setUp('<?php echo h($data['hashes'][$i]); ?>')">上にセット</button>
+            <button onClick="setDown('<?php echo h($data['hashes'][$i]); ?>')">下にセット</button>
+          <?php endif; ?>
+        </span>
+        */ ?>
+        <span class="graph"><?php echo $message; ?></span>
+      </li>
     <?php endfor; ?>
   </ul>
 <?php endif; ?>
-  </body>
+</body>
 
 <script>
 var element = document.getElementById('submit_btn');
@@ -124,5 +151,13 @@ element.addEventListener("click", function(event){
     document.diffForm.submit();
   }
 });
+function setUp(num){
+  var select = document.getElementById("UP");
+  select.value = num;
+}
+function setDown(num){
+  var select = document.getElementById("DOWN");
+  select.value = num;
+}
 </script>
 </html>
