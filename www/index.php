@@ -24,9 +24,11 @@ $project = filter_input(INPUT_GET, 'project');
     .date { color: green; }
     .author, .author a { color: darkviolet; }
     .tags { color: goldenrod; }
-    .commitMsg { height: 2em; }
+    .commitMsg { height: 2.2em; }
     .caution { font-size: 24px; color: red; font-weight: bold; }
-    .btnArea { width:300px; }
+    /*.btnArea { width:300px; }*/
+    .btnArea {float:left;width:200px;min-height:1px;}
+    .graph { float:left; margin-top:5px; }
   </style>
 
 </head>
@@ -65,10 +67,12 @@ $project = filter_input(INPUT_GET, 'project');
 
   // コミットメッセージのみを取得
   $temp_msgs = array();
-  exec( "/usr/bin/env git log --pretty=tformat:%s --all $limit", $temp_msgs );
+  exec( "/usr/bin/env git log --pretty=tformat:%s --all --graph $limit", $temp_msgs );
   foreach($temp_msgs as $v){
     if(preg_match('/Merge branch/', $v)){
       $data['msgs'][] = 'Merge branch 〜';
+    }elseif(preg_match('/(\*\ \|\ |\*\ |\|\ \*\ |)/', $v, $match)){
+      $data['msgs'][] = str_replace($match[0],'',$v);
     }else{
       $data['msgs'][] = $v;
     }
@@ -89,6 +93,13 @@ $project = filter_input(INPUT_GET, 'project');
     }
   }
   
+  /*
+  echo '<pre>';
+  var_dump($data['msgs']);
+  echo '</pre>';
+  exit;
+  */
+  
 ?>
 
 <?php if(!empty($data['hashes'])): ?>
@@ -104,16 +115,19 @@ $project = filter_input(INPUT_GET, 'project');
     上：
     <select name="up" id="UP">
       <?php foreach($data['hashes'] as $key => $hash): ?>
-      <option value="<?php echo h($hash); ?>"><?php echo h($hash.' : '.$data['msgs'][$key]); ?></option>
+        <?php if(empty($hash)){continue;} ?>
+        <option value="<?php echo h($hash); ?>"><?php echo h($hash.' : '.$data['msgs'][$key]); ?></option>
       <?php endforeach; ?>
     </select>
-
+    <br><br>
     下：
     <select name="down" id="DOWN">
       <?php foreach($data['hashes'] as $key =>$hash): ?>
-      <option value="<?php echo h($hash); ?>"><?php echo h($hash.' : '.$data['msgs'][$key]); ?></option>
+        <?php if(empty($hash)){continue;} ?>
+        <option value="<?php echo h($hash); ?>"><?php echo h($hash.' : '.$data['msgs'][$key]); ?></option>
       <?php endforeach; ?>
     </select>
+    <br><br>
     <input type="submit" value="抽出" id="submit_btn" onclick="return false">
     <p class="caution">「下」は抽出したい範囲の一つ下を選択してください</p>
   </form>
@@ -128,15 +142,17 @@ $project = filter_input(INPUT_GET, 'project');
         $message = str_replace('__COMMENT__',$msg,$data['lines'][$i]);
       ?>
       <li class="commitMsg">
-        <?php /*
+        
         <span class="btnArea">
           <?php if(!empty($data['hashes'][$i])): ?>
             <button onClick="setUp('<?php echo h($data['hashes'][$i]); ?>')">上にセット</button>
             <button onClick="setDown('<?php echo h($data['hashes'][$i]); ?>')">下にセット</button>
           <?php endif; ?>
         </span>
-        */ ?>
-        <span class="graph"><?php echo $message; ?></span>
+        
+        <div class="graph"><?php echo $message; ?></div>
+        <?php /* echo $message; */ ?>
+        
       </li>
     <?php endfor; ?>
   </ul>
