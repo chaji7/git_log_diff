@@ -63,11 +63,11 @@ $project = filter_input(INPUT_GET, 'project');
   $data = [];
   
   // コミットメッセージのみを取得
-  exec( "/usr/bin/env git log --pretty=tformat:%s --all --graph $limit", $data['graph_msgs'] );
+  exec( "git log --pretty=tformat:%s --all --graph $limit", $data['graph_msgs'] );
 
   // コミットメッセージのみを取得
   $temp_msgs = array();
-  exec( "/usr/bin/env git log --pretty=tformat:%s --all --graph $limit", $temp_msgs );
+  exec( "git log --pretty=tformat:%s --all --graph $limit", $temp_msgs );
   foreach($temp_msgs as $v){
     if(preg_match('/Merge branch/', $v)){
       $data['msgs'][] = 'Merge branch 〜';
@@ -80,11 +80,11 @@ $project = filter_input(INPUT_GET, 'project');
 
 
   // 抽出したデータをHTML整形して取得
-  exec( "/usr/bin/env git log --pretty=tformat:'</span>%h - <span class=\"date\">[%cr]</span> <span class=\"tags\">%d</span> __COMMENT__ <span class=\"author\">&lt;%an&gt;</span></li>' --all --graph --abbrev-commit $limit", $data['lines'] );
+  exec( "git log --pretty=tformat:'</span>%h - <span class=\"date\">[%cr]</span> <span class=\"tags\">%d</span> __COMMENT__ <span class=\"author\">&lt;%an&gt;</span></li>' --all --graph --abbrev-commit $limit", $data['lines'] );
 
   // コミットハッシュ値の取得
   $temp_hashes = array();
-  exec( "/usr/bin/env git log --pretty=tformat:%h --all --graph $limit", $temp_hashes );
+  exec( "git log --pretty=tformat:%h --all --graph $limit", $temp_hashes );
   foreach($temp_hashes as $hash){
     if(preg_match('/[!-~]{7}/', $hash, $match)){
       $data['hashes'][] = $match[0];

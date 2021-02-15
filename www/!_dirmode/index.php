@@ -61,11 +61,11 @@ require_once substr($_SERVER['SCRIPT_FILENAME'], 0, -strlen($_SERVER['SCRIPT_NAM
   $data = [];
 
   // コミットメッセージのみを取得
-  exec( "/usr/bin/env git log --pretty=tformat:%s --all --graph $limit", $data['graph_msgs'] );
+  exec( "git log --pretty=tformat:%s --all --graph $limit", $data['graph_msgs'] );
 
   // コミットメッセージのみを取得
   $temp_msgs = array();
-  exec( "/usr/bin/env git log --pretty=tformat:%s --all --graph $limit", $temp_msgs );
+  exec( "git log --pretty=tformat:%s --all --graph $limit", $temp_msgs );
   foreach($temp_msgs as $v){
     if(preg_match('/Merge branch/', $v)){
       $data['msgs'][] = 'Merge branch 〜';
@@ -77,11 +77,11 @@ require_once substr($_SERVER['SCRIPT_FILENAME'], 0, -strlen($_SERVER['SCRIPT_NAM
   }
 
   // 抽出したデータをHTML整形して取得
-  exec( "/usr/bin/env git log --pretty=tformat:'</span>%h - <span class=\"date\">[%cr]</span> <span class=\"tags\">%d</span> __COMMENT__ <span class=\"author\">&lt;%an&gt;</span></li>' --all --graph --abbrev-commit $limit", $data['lines'] );
+  exec( "git log --pretty=tformat:'</span>%h - <span class=\"date\">[%cr]</span> <span class=\"tags\">%d</span> __COMMENT__ <span class=\"author\">&lt;%an&gt;</span></li>' --all --graph --abbrev-commit $limit", $data['lines'] );
 
   // コミットハッシュ値の取得
   $temp_hashes = array();
-  exec( "/usr/bin/env git log --pretty=tformat:%h --all --graph $limit", $temp_hashes );
+  exec( "git log --pretty=tformat:%h --all --graph $limit", $temp_hashes );
   foreach($temp_hashes as $hash){
     if(preg_match('/[!-~]{7}/', $hash, $match)){
       $data['hashes'][] = $match[0];
@@ -110,7 +110,7 @@ require_once substr($_SERVER['SCRIPT_FILENAME'], 0, -strlen($_SERVER['SCRIPT_NAM
         <option value="<?php echo h($hash); ?>"><?php echo h($hash.' : '.$data['msgs'][$key]); ?></option>
       <?php endforeach; ?>
     </select>
-
+    <br><br>
     下：
     <select name="down" id="DOWN">
       <?php foreach($data['hashes'] as $key =>$hash): ?>
@@ -118,6 +118,7 @@ require_once substr($_SERVER['SCRIPT_FILENAME'], 0, -strlen($_SERVER['SCRIPT_NAM
         <option value="<?php echo h($hash); ?>"><?php echo h($hash.' : '.$data['msgs'][$key]); ?></option>
       <?php endforeach; ?>
     </select>
+    <br><br>
     <input type="submit" value="抽出" id="submit_btn" onclick="return false">
     <p class="caution">「下」は抽出したい範囲の一つ下を選択してください</p>
   </form>

@@ -19,7 +19,7 @@ chdir($path_to_repository);
 
 // 差分の一時ファイルをzipファイルでtmpディレクトリ以下に出力
 $msgs = array();
-exec( "/usr/bin/env git archive $up `git diff --name-only $down $up --diff-filter=ACMR` -o $this_dir/tmp/diff.zip", $msgs );
+exec( "git archive $up `git diff --name-only $down $up --diff-filter=ACMR` -o $this_dir/tmp/diff.zip", $msgs );
 
 // 出力したzipファイルをPHPでダウンロード
 download("$this_dir/tmp/diff.zip", 'application/zip', $referer);
