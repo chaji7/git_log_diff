@@ -32,148 +32,162 @@ $project = filter_input(INPUT_GET, 'project');
   </style>
 
 </head>
+
+<?php if (!empty($project)) : ?>
+
 <body>
   <h1><?php echo h($project).'のGit履歴'; ?></h1>
   <?php
-  if ( !empty($_GET['debug']) ){
-    error_reporting(E_ALL);
-    ini_set('display_errors', 1);
-  } else {
-    error_reporting(0);
-    ini_set('display_errors', 0);
-  }
-  ini_set('memory_limit','256M');
-
-  $limit = '--max-count=500';
-  if ( !empty($_GET['limit']) ){
-    if ( strtolower($_GET['limit']) == 'all' ){
-      $limit = '--max';
+    if ( !empty($_GET['debug']) ){
+      error_reporting(E_ALL);
+      ini_set('display_errors', 1);
+    } else {
+      error_reporting(0);
+      ini_set('display_errors', 0);
     }
-    else {
-      $limit = '--max-count='.intval($_GET['limit']);
-    }
-  }
+    ini_set('memory_limit','256M');
 
-  if (!empty($project)) {
+    $limit = '--max-count=500';
+    if ( !empty($_GET['limit']) ){
+      if ( strtolower($_GET['limit']) == 'all' ){
+        $limit = '--max';
+      }
+      else {
+        $limit = '--max-count='.intval($_GET['limit']);
+      }
+    }
+
     $path_to_repository = '../../'.h($project);
     chdir($path_to_repository);
-  }
 
 
-  $data = [];
-  
-  // コミットメッセージのみを取得
-  exec( "git log --pretty=tformat:%s --all --graph $limit", $data['graph_msgs'] );
+    $data = [];
+    
+    // コミットメッセージのみを取得
+    exec( "git log --pretty=tformat:%s --all --graph $limit", $data['graph_msgs'] );
 
-  // コミットメッセージのみを取得
-  $temp_msgs = array();
-  exec( "git log --pretty=tformat:%s --all --graph $limit", $temp_msgs );
-  foreach($temp_msgs as $v){
-    if(preg_match('/Merge branch/', $v)){
-      $data['msgs'][] = 'Merge branch 〜';
-    }elseif(preg_match('/(\*\ \|\ |\*\ |\|\ \*\ |)/', $v, $match)){
-      $data['msgs'][] = str_replace($match[0],'',$v);
-    }else{
-      $data['msgs'][] = $v;
-    }
-  }
-
-
-  // 抽出したデータをHTML整形して取得
-  exec( "git log --pretty=tformat:'</span>%h - <span class=\"date\">[%cr]</span> <span class=\"tags\">%d</span> __COMMENT__ <span class=\"author\">&lt;%an&gt;</span></li>' --all --graph --abbrev-commit $limit", $data['lines'] );
-
-  // コミットハッシュ値の取得
-  $temp_hashes = array();
-  exec( "git log --pretty=tformat:%h --all --graph $limit", $temp_hashes );
-  foreach($temp_hashes as $hash){
-    if(preg_match('/[!-~]{7}/', $hash, $match)){
-      $data['hashes'][] = $match[0];
-    }else{
-      $data['hashes'][] = '';
-    }
-  }
-  
-  /*
-  echo '<pre>';
-  var_dump($data['msgs']);
-  echo '</pre>';
-  exit;
-  */
-  
-?>
-
-<?php if(!empty($data['hashes'])): ?>
-  <form action="./download.php" method="get" name="diffForm" id="Form">
-    <?php
-      if(!empty($_GET['project'])){
-        $project = $_GET['project'];
+    // コミットメッセージのみを取得
+    $temp_msgs = array();
+    exec( "git log --pretty=tformat:%s --all --graph $limit", $temp_msgs );
+    foreach($temp_msgs as $v){
+      if(preg_match('/Merge branch/', $v)){
+        $data['msgs'][] = 'Merge branch 〜';
+      }elseif(preg_match('/(\*\ \|\ |\*\ |\|\ \*\ |)/', $v, $match)){
+        $data['msgs'][] = str_replace($match[0],'',$v);
       }else{
-        $project = '';
+        $data['msgs'][] = $v;
       }
-    ?>
-    <input type="hidden" name="project" value="<?php echo h($project); ?>" >
-    上：
-    <select name="up" id="UP">
-      <?php foreach($data['hashes'] as $key => $hash): ?>
-        <?php if(empty($hash)){continue;} ?>
-        <option value="<?php echo h($hash); ?>"><?php echo h($hash.' : '.$data['msgs'][$key]); ?></option>
-      <?php endforeach; ?>
-    </select>
-    <br><br>
-    下：
-    <select name="down" id="DOWN">
-      <?php foreach($data['hashes'] as $key =>$hash): ?>
-        <?php if(empty($hash)){continue;} ?>
-        <option value="<?php echo h($hash); ?>"><?php echo h($hash.' : '.$data['msgs'][$key]); ?></option>
-      <?php endforeach; ?>
-    </select>
-    <br><br>
-    <input type="submit" value="抽出" id="submit_btn" onclick="return false">
-    <p class="caution">「下」は抽出したい範囲の一つ下を選択してください</p>
-  </form>
-<?php endif; ?>
+    }
+
+
+    // 抽出したデータをHTML整形して取得
+    exec( "git log --pretty=tformat:'</span>%h - <span class=\"date\">[%cr]</span> <span class=\"tags\">%d</span> __COMMENT__ <span class=\"author\">&lt;%an&gt;</span></li>' --all --graph --abbrev-commit $limit", $data['lines'] );
+
+    // コミットハッシュ値の取得
+    $temp_hashes = array();
+    exec( "git log --pretty=tformat:%h --all --graph $limit", $temp_hashes );
+    foreach($temp_hashes as $hash){
+      if(preg_match('/[!-~]{7}/', $hash, $match)){
+        $data['hashes'][] = $match[0];
+      }else{
+        $data['hashes'][] = '';
+      }
+    }
+    
+  ?>
+
+  <?php if(!empty($data['hashes'])): ?>
+    <form action="./download.php" method="get" name="diffForm" id="Form">
+      <?php
+        if(!empty($_GET['project'])){
+          $project = $_GET['project'];
+        }else{
+          $project = '';
+        }
+      ?>
+      <input type="hidden" name="project" value="<?php echo h($project); ?>" >
+      上：
+      <select name="up" id="UP">
+        <?php foreach($data['hashes'] as $key => $hash): ?>
+          <?php if(empty($hash)){continue;} ?>
+          <option value="<?php echo h($hash); ?>"><?php echo h($hash.' : '.$data['msgs'][$key]); ?></option>
+        <?php endforeach; ?>
+      </select>
+      <br><br>
+      下：
+      <select name="down" id="DOWN">
+        <?php foreach($data['hashes'] as $key =>$hash): ?>
+          <?php if(empty($hash)){continue;} ?>
+          <option value="<?php echo h($hash); ?>"><?php echo h($hash.' : '.$data['msgs'][$key]); ?></option>
+        <?php endforeach; ?>
+      </select>
+      <br><br>
+      <input type="submit" value="抽出" id="submit_btn" onclick="return false">
+      <p class="caution">「下」は抽出したい範囲の一つ下を選択してください</p>
+    </form>
+  <?php endif; ?>
   
 
-<?php if (!empty($data['graph_msgs']) && !empty($data['lines'])): ?>
-  <ul>
-    <?php for ($i=0; $i<count($data['lines']); $i++ ): ?>
-      <?php
-        $msg = htmlentities($data['graph_msgs'][$i],ENT_QUOTES);
-        $message = str_replace('__COMMENT__',$msg,$data['lines'][$i]);
-      ?>
-      <li class="commitMsg">
-        
-        <span class="btnArea">
-          <?php if(!empty($data['hashes'][$i])): ?>
-            <button onClick="setUp('<?php echo h($data['hashes'][$i]); ?>')">上にセット</button>
-            <button onClick="setDown('<?php echo h($data['hashes'][$i]); ?>')">下にセット</button>
-          <?php endif; ?>
-        </span>
-        
-        <div class="graph"><?php echo $message; ?></div>
-        <?php /* echo $message; */ ?>
-        
-      </li>
-    <?php endfor; ?>
-  </ul>
-<?php endif; ?>
+  <?php if (!empty($data['graph_msgs']) && !empty($data['lines'])): ?>
+    <ul>
+      <?php for ($i=0; $i<count($data['lines']); $i++ ): ?>
+        <?php
+          $msg = htmlentities($data['graph_msgs'][$i],ENT_QUOTES);
+          $message = str_replace('__COMMENT__',$msg,$data['lines'][$i]);
+        ?>
+        <li class="commitMsg">
+          
+          <span class="btnArea">
+            <?php if(!empty($data['hashes'][$i])): ?>
+              <button onClick="setUp('<?php echo h($data['hashes'][$i]); ?>')">上にセット</button>
+              <button onClick="setDown('<?php echo h($data['hashes'][$i]); ?>')">下にセット</button>
+            <?php endif; ?>
+          </span>
+          
+          <div class="graph"><?php echo $message; ?></div>
+          <?php /* echo $message; */ ?>
+          
+        </li>
+      <?php endfor; ?>
+    </ul>
+  <?php endif; ?>
 </body>
 
-<script>
-var element = document.getElementById('submit_btn');
-element.addEventListener("click", function(event){
-  flg = confirm('ダウンロードしてもよろしいですか？');
-  if(flg == true){
-    document.diffForm.submit();
+  <script>
+  var element = document.getElementById('submit_btn');
+  element.addEventListener("click", function(event){
+    flg = confirm('ダウンロードしてもよろしいですか？');
+    if(flg == true){
+      document.diffForm.submit();
+    }
+  });
+  function setUp(num){
+    var select = document.getElementById("UP");
+    select.value = num;
   }
-});
-function setUp(num){
-  var select = document.getElementById("UP");
-  select.value = num;
-}
-function setDown(num){
-  var select = document.getElementById("DOWN");
-  select.value = num;
-}
-</script>
+  function setDown(num){
+    var select = document.getElementById("DOWN");
+    select.value = num;
+  }
+  </script>
+
+<?php else: ?>
+
+  <?php
+    // プロジェクトリストの出力
+    chdir('../../');
+    $dir_list = [];
+    exec( "ls", $dir_list);
+    $this_repository = array_search('git_log_diff', $dir_list);
+    unset($dir_list[$this_repository]);
+  ?>
+  <h1>プロジェクトを以下から選択してください</h1>
+
+  <ul>
+    <?php foreach($dir_list as $project): ?>
+    <li class="commitMsg"><a href="<?php echo h("/?project={$project}"); ?>"><?php echo h($project); ?></a></li>
+    <?php endforeach; ?>
+  </ul>
+<?php endif; ?>
+
 </html>
