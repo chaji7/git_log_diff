@@ -81,7 +81,7 @@ $project = filter_input(INPUT_GET, 'project');
 
 
     // 抽出したデータをHTML整形して取得
-    exec( "git log --pretty=tformat:'</span>%h - <span class=\"date\">[%cr]</span> <span class=\"tags\">%d</span> __COMMENT__ <span class=\"author\">&lt;%an&gt;</span></li>' --all --graph --abbrev-commit $limit", $data['lines'] );
+    exec( "git log --pretty=tformat:'</span>%h - <span class=\"date\">[%cr]</span> <span class=\"tags\">%d</span> __COMMENT__ <span class=\"author\">&lt;%an&gt;</span></li>' --all --graph --abbrev-commit $limit", $data['lines'], $status_code );
 
     // コミットハッシュ値の取得
     $temp_hashes = array();
@@ -93,7 +93,8 @@ $project = filter_input(INPUT_GET, 'project');
         $data['hashes'][] = '';
       }
     }
-    
+    //var_dump(PHP_OS);
+    //exit;
   ?>
 
   <?php if(!empty($data['hashes'])): ?>

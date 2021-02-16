@@ -1,6 +1,6 @@
 <?php
 
-define('PATH_TO', '../../');
+define('PATH_TO', '../');
 
 // 内部文字コードをUTF8にする
 mb_language("ja");

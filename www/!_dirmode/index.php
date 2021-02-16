@@ -3,8 +3,7 @@
 // http://git_log_diff.example.php74/?project=project_name
 
 //共通
-require_once substr($_SERVER['SCRIPT_FILENAME'], 0, -strlen($_SERVER['SCRIPT_NAME'])).'/!_dirmode/includes/init.php';
-//$project = filter_input(INPUT_GET, 'project');
+require_once dirname($_SERVER['SCRIPT_FILENAME']).'/includes/init.php';
 /**
  * $_GET['debug'] = デバッグ用
  * $_GET['limit'] = 履歴表示件数

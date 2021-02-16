@@ -1,12 +1,14 @@
 <?php
-//echo '<pre>';
 
-require_once substr($_SERVER['SCRIPT_FILENAME'], 0, -strlen($_SERVER['SCRIPT_NAME'])).'/!_dirmode/includes/init.php';
+require_once dirname($_SERVER['SCRIPT_FILENAME']).'/includes/init.php';
 
 // 直接アクセスは404
 $referer = $_SERVER['HTTP_REFERER'];
 if(empty($referer)){
   // 404
+  header("HTTP/1.1 404 Not Found");
+  include ('404.php');
+  exit;
 }
 $this_dir = dirname($_SERVER['SCRIPT_FILENAME']);
 //$project = filter_input(INPUT_GET, 'project');
