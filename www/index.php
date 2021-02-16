@@ -30,7 +30,7 @@ $project = filter_input(INPUT_GET, 'project');
     .btnArea {float:left;width:200px;min-height:1px;}
     .graph { float:left; margin-top:5px; }
   </style>
-
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 
 <?php if (!empty($project)) : ?>
@@ -155,20 +155,33 @@ $project = filter_input(INPUT_GET, 'project');
 </body>
 
   <script>
-  var element = document.getElementById('submit_btn');
-  element.addEventListener("click", function(event){
+  var hash_json = <?php echo !empty($data['hashes']) ? json_encode($data['hashes']):''; ?>;
+  $('#submit_btn').click(function () {
+    // 同一コミットチチェック
+    if($('#UP').val() == $('#DOWN').val()){
+      alert('同じコミットを選択することはできません');
+      return false;
+    }
+    for(i in hash_json){
+      if(hash_json[i]==$('#UP').val()){var up_key = i;}
+      if(hash_json[i]==$('#DOWN').val()){var down_key = i;}
+    }
+    // 上下選択の順番がおかしい
+    if(up_key > down_key){
+      alert('コミットの選択が正しくありません');
+      return false;
+    }
+    // DL確認
     flg = confirm('ダウンロードしてもよろしいですか？');
     if(flg == true){
       document.diffForm.submit();
     }
   });
   function setUp(num){
-    var select = document.getElementById("UP");
-    select.value = num;
+    $('#UP').val(num);
   }
   function setDown(num){
-    var select = document.getElementById("DOWN");
-    select.value = num;
+    $('#DOWN').val(num);
   }
   </script>
 
